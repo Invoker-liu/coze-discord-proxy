@@ -5,6 +5,8 @@ definitions:
         type: string
       parentId:
         type: string
+      type:
+        type: number
     type: object
   model.ChannelResp:
     properties:
@@ -13,21 +15,16 @@ definitions:
       name:
         type: string
     type: object
-  model.ChatReq:
+  model.OpenAIChatCompletionRequest:
     properties:
       channelId:
         type: string
-      content:
-        type: string
-      stream:
-        type: boolean
-    type: object
-  model.OpenAIChatCompletionRequest:
-    properties:
       messages:
         items:
           $ref: '#/definitions/model.OpenAIChatMessage'
         type: array
+      model:
+        type: string
       stream:
         type: boolean
     type: object
@@ -45,6 +42,10 @@ definitions:
         type: string
       object:
         type: string
+      suggestions:
+        items:
+          type: string
+        type: array
       system_fingerprint:
         type: string
       usage:
@@ -52,8 +53,7 @@ definitions:
     type: object
   model.OpenAIChatMessage:
     properties:
-      content:
-        type: string
+      content: { }
       role:
         type: string
     type: object
@@ -75,6 +75,41 @@ definitions:
       content:
         type: string
     type: object
+  model.OpenAIImagesGenerationDataResponse:
+    properties:
+      b64_json:
+        type: string
+      revised_prompt:
+        type: string
+      url:
+        type: string
+    type: object
+  model.OpenAIImagesGenerationRequest:
+    properties:
+      channelId:
+        type: string
+      model:
+        type: string
+      prompt:
+        type: string
+      response_format:
+        type: string
+    type: object
+  model.OpenAIImagesGenerationResponse:
+    properties:
+      created:
+        type: integer
+      dailyLimit:
+        type: boolean
+      data:
+        items:
+          $ref: '#/definitions/model.OpenAIImagesGenerationDataResponse'
+        type: array
+      suggestions:
+        items:
+          type: string
+        type: array
+    type: object
   model.OpenAIMessage:
     properties:
       content:
@@ -91,14 +126,21 @@ definitions:
       total_tokens:
         type: integer
     type: object
-  model.ReplyResp:
+  model.OpenaiModelListResponse:
     properties:
-      content:
-        type: string
-      embedUrls:
+      data:
         items:
-          type: string
+          $ref: '#/definitions/model.OpenaiModelResponse'
         type: array
+      object:
+        type: string
+    type: object
+  model.OpenaiModelResponse:
+    properties:
+      id:
+        type: string
+      object:
+        type: string
     type: object
   model.ThreadReq:
     properties:
@@ -165,32 +207,21 @@ paths:
       summary: 删除频道
       tags:
         - channel
-  /api/chat:
-    post:
+  /api/del/all/cdp:
+    get:
       consumes:
         - application/json
-      description: 发送消息
-      parameters:
-        - description: chatModel
-          in: body
-          name: chatModel
-          required: true
-          schema:
-            $ref: '#/definitions/model.ChatReq'
-        - description: proxy-secret
-          in: header
-          name: proxy-secret
-          type: string
+      description: 删除全部CDP临时频道[谨慎调用]
       produces:
         - application/json
       responses:
         "200":
           description: Successful response
           schema:
-            $ref: '#/definitions/model.ReplyResp'
-      summary: 发送消息
+            type: string
+      summary: 删除全部CDP临时频道[谨慎调用]
       tags:
-        - chat
+        - channel
   /api/thread/create:
     post:
       consumes:
@@ -229,6 +260,10 @@ paths:
           in: header
           name: Authorization
           type: string
+        - description: out-time
+          in: header
+          name: out-time
+          type: string
       produces:
         - application/json
       responses:
@@ -238,5 +273,55 @@ paths:
             $ref: '#/definitions/model.OpenAIChatCompletionResponse'
       summary: 发送消息-openai
       tags:
-        - chat -openai
+        - openai
+  /v1/images/generations:
+    post:
+      consumes:
+        - application/json
+      description: 图片生成-openai
+      parameters:
+        - description: request
+          in: body
+          name: request
+          required: true
+          schema:
+            $ref: '#/definitions/model.OpenAIImagesGenerationRequest'
+        - description: Authorization
+          in: header
+          name: Authorization
+          type: string
+        - description: out-time
+          in: header
+          name: out-time
+          type: string
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: Successful response
+          schema:
+            $ref: '#/definitions/model.OpenAIImagesGenerationResponse'
+      summary: 图片生成-openai
+      tags:
+        - openai
+  /v1/models:
+    get:
+      consumes:
+        - application/json
+      description: 模型列表-openai
+      parameters:
+        - description: Authorization
+          in: header
+          name: Authorization
+          type: string
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: Successful response
+          schema:
+            $ref: '#/definitions/model.OpenaiModelListResponse'
+      summary: 模型列表-openai
+      tags:
+        - openai
 swagger: "2.0"
